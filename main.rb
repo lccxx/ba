@@ -38,7 +38,7 @@ get_btc_orders = lambda {
   return JSON.parse res.body
 }
 
-get_my_balances = lambda {
+get_balances = lambda {
   req = sign_req.call('account', { timestamp: (Time.now.to_f * 1000).to_i })
   res = Net::HTTP.start(API_HOST, 443, use_ssl: true) { |http| http.request(req) }
   return JSON.parse(res.body)['balances']
@@ -46,7 +46,7 @@ get_my_balances = lambda {
 
 puts "BTC lastest price: #{get_btc_price.call}"
 print 'My BTC balance: '
-get_my_balances.call.each { |balance|
+get_balances.call.each { |balance|
   asset = balance['asset']
   free = BigDecimal(balance['free'])
   locked = BigDecimal(balance['locked'])
