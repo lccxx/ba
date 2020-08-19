@@ -42,27 +42,31 @@ get_balances = lambda {
   return JSON.parse(res.body)['balances']
 }
 
-puts "BTC lastest price: #{get_btc_price.call}"
-print 'My BTC balance: '
-get_balances.call.each { |balance|
-  asset = balance['asset']
-  free = BigDecimal(balance['free'])
-  locked = BigDecimal(balance['locked'])
-  puts "#{free.to_s('8F')} + #{locked.to_s('8F')}" if asset === 'BTC'
+loop { 
+  get_balances.call.each { |balance|
+    asset = balance['asset']
+    next if not [ 'BTC', 'USDT' ].include?(asset)
+    free = BigDecimal(balance['free'])
+    locked = BigDecimal(balance['locked'])
+    puts "My #{asset} balance: #{free.to_s('8F')} + #{locked.to_s('8F')}"
+    if free > 1
+      btc_last_buy_price = btc_last_sell_price = 11900
+
+      get_btc_orders.call.each { |order|
+        side = order['side']
+        status = order['status']
+        price = order['price'].to_i
+
+        btc_last_buy_price = price if status === 'FILLED' && side === 'BUY'
+        btc_last_sell_price = price if status === 'FILLED' && side === 'SELL'
+      }
+
+      puts "BTC lastest price: #{get_btc_price.call}"
+      puts "My BTC last buy price: #{btc_last_buy_price}"
+      puts "My BTC last sell price: #{btc_last_sell_price}"
+      # TODO: order
+    end
+  }
+
+  sleep (1 + rand * 9).to_i
 }
-
-btc_last_buy_price = btc_last_sell_price = 11900
-
-get_btc_orders.call.each { |order|
-  side = order['side']
-  status = order['status']
-  price = order['price'].to_i
-
-  btc_last_buy_price = price if status === 'FILLED' && side === 'BUY'
-  btc_last_sell_price = price if status === 'FILLED' && side === 'SELL'
-}
-
-puts "My BTC last buy price: #{btc_last_buy_price}"
-puts "My BTC last sell price: #{btc_last_sell_price}"
-
-# TODO: loop check & order
