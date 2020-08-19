@@ -66,3 +66,5 @@ get_btc_orders.call.each { |order|
 
 puts "My BTC last buy price: #{btc_last_buy_price}"
 puts "My BTC last sell price: #{btc_last_sell_price}"
+
+# TODO: loop check & order
