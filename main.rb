@@ -17,30 +17,28 @@ SECRET_KEY = ENV['BA_SECRET_KEY']
 abort "error: need Binance API keys" if !API_KEY || !SECRET_KEY
 
 API_HOST = 'api.binance.com'
+API_PREFIX = '/api/v3/'
 
 sign_req = lambda { |api, params|
   query = URI.encode_www_form params
   signature = OpenSSL::HMAC.hexdigest("SHA256", SECRET_KEY, query)
-  req = Net::HTTP::Get.new("/api/v3/#{api}?#{query}&signature=#{signature}")
+  req = Net::HTTP::Get.new("#{API_PREFIX}#{api}?#{query}&signature=#{signature}")
   req['X-MBX-APIKEY'] = API_KEY
-  return req
+  return Net::HTTP.start(API_HOST, 443, use_ssl: true) { |http| http.request(req) }
 }
 
 get_btc_price = lambda {
-  req = Net::HTTP::Get.new('/api/v3/ticker/price?symbol=BTCUSDT')
-  res = Net::HTTP.start(API_HOST, 443, use_ssl: true) { |http| http.request(req) }
-  return JSON.parse(res.body)['price'].to_i
+  res_body = Net::HTTP.get URI "https://#{API_HOST}#{API_PREFIX}ticker/price?symbol=BTCUSDT"
+  return JSON.parse(res_body)['price'].to_i
 }
 
 get_btc_orders = lambda {
-  req = sign_req.call('allOrders', { symbol: 'BTCUSDT', limit: 9, timestamp: (Time.now.to_f * 1000).to_i })
-  res = Net::HTTP.start(API_HOST, 443, use_ssl: true) { |http| http.request(req) }
+  res = sign_req.call('allOrders', { symbol: 'BTCUSDT', limit: 9, timestamp: (Time.now.to_f * 1000).to_i })
   return JSON.parse res.body
 }
 
 get_balances = lambda {
-  req = sign_req.call('account', { timestamp: (Time.now.to_f * 1000).to_i })
-  res = Net::HTTP.start(API_HOST, 443, use_ssl: true) { |http| http.request(req) }
+  res = sign_req.call('account', { timestamp: (Time.now.to_f * 1000).to_i })
   return JSON.parse(res.body)['balances']
 }
 
