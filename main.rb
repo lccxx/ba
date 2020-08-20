@@ -55,6 +55,19 @@ order = lambda { |side, price, quantity|
   return JSON.parse res.body
 }
 
+btc_last_prices = lambda {
+  result = [ get_btc_price.call, 0, 0 ]
+  get_btc_orders.call.each { |order|
+    side = order['side']
+    status = order['status']
+    price = order['price'].to_i
+
+    result[1] = price if status === 'FILLED' && side === 'SELL'
+    result[2] = price if status === 'FILLED' && side === 'BUY'
+  }
+  return result
+}
+
 going = true
 
 Signal.trap('SIGINT') { puts "SIGINT"; going = false }
@@ -62,16 +75,15 @@ Signal.trap('TERM') { puts "TERM"; going = false }
 
 btc_free = 0
 usdt_free = 0
-btc_current_price = get_btc_price.call
-btc_last_sell_price = 12500
+btc_current_price, btc_last_sell_price, btc_last_buy_price = btc_last_prices.call
 
-puts "BTC current price: #{btc_current_price}"
+puts "BTC current price: #{btc_current_price}, Last sell: #{btc_last_sell_price}, Last buy: #{btc_last_buy_price}"
 puts 'Recent orders: '
 get_btc_orders.call.reverse.each { |order|
   puts "  #{order['status']} #{order['side']} #{order['price'].to_i} #{order['origQty']}"
 }
 
-while going
+loop {
   get_balances.call.each { |balance|
     asset = balance['asset']
     free = BigDecimal(balance['free'])
@@ -79,28 +91,23 @@ while going
     btc_free = free if asset === 'BTC'
     usdt_free = free if asset === 'USDT'
   }
+  puts "#{Time.now}, Banlances: #{btc_free.to_s('8F')}, #{usdt_free}"
 
-  get_btc_orders.call.each { |order|
-    side = order['side']
-    status = order['status']
-    price = order['price'].to_i
-
-    btc_last_sell_price = price if status === 'FILLED' && side === 'SELL'
-  } if btc_free > 1 || usdt_free > 1
-
-  puts "#{Time.now}: #{btc_free.to_s('8F')}, #{usdt_free}, #{btc_last_sell_price}"
+  btc_current_price, btc_last_sell_price, btc_last_buy_price = btc_last_prices.call if btc_free > 1 || usdt_free > 1
 
   if btc_free > 1
-    btc_current_price = get_btc_price.call
 
-    btc_sell_price = (btc_current_price > btc_last_sell_price ? btc_current_price : btc_last_sell_price) + 100
+    btc_sell_price = btc_last_buy_price + 500
+    btc_sell_price = btc_current_price + 100 if btc_sell_price < btc_current_price
     order.call('SELL', btc_sell_price, btc_free.to_s('8F'))
   end
 
   if usdt_free > 1
     btc_buy_price = btc_last_sell_price - 500
+    btc_buy_price = btc_current_price - 100 if btc_buy_price > btc_current_price
     order.call('BUY', btc_buy_price, (usdt_free / btc_buy_price).to_s('8F'))
   end
 
-  sleep (1 + rand * 9).to_i
-end
+  (9 + rand * 39).to_i.times { sleep 0.1 if going }
+  break if not going
+}
