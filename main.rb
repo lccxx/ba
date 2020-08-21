@@ -98,7 +98,6 @@ loop {
   btc_current_price, btc_last_sell_price, btc_last_buy_price = btc_last_prices.call if btc_free > 1 || usdt_free > 1
 
   if btc_free > 1
-
     btc_sell_price = btc_last_buy_price + 500
     btc_sell_price = btc_current_price + 100 if btc_sell_price < btc_current_price
     order.call('SELL', btc_sell_price, btc_free.to_s('8F'))
