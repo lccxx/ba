@@ -1,8 +1,5 @@
 #!/bin/bash
 
-SERVICE_PATH=$(dirname $(readlink -f $0))
-SELF_PATH=$(dirname $SERVICE_PATH)
+SELF_DIR=$(dirname $(dirname $(readlink -f $0)))
 
-cd $SELF_PATH
-
-/usr/bin/ruby main.rb >> run.log
+exec ruby $SELF_DIR/main.rb >> $SELF_DIR/run.log

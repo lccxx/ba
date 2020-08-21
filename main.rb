@@ -6,10 +6,12 @@ require 'net/http'
 require 'json'
 require 'bigdecimal'
 
-File.foreach('.env') { |line|
+dot_env_file = File.join(File.dirname(__FILE__), '.env')
+
+File.foreach(dot_env_file) { |line|
   k, v = line.split('=').map { |str| str.strip }
   ENV[k] = v
-} if File.exist?('.env')
+} if File.exist?(dot_env_file)
 
 API_KEY = ENV['BA_API_KEY']
 SECRET_KEY = ENV['BA_SECRET_KEY']
@@ -91,7 +93,7 @@ loop {
     btc_free = free if asset === 'BTC'
     usdt_free = free if asset === 'USDT'
   }
-  puts "#{Time.now}, Banlances: #{btc_free.to_s('8F')}, #{usdt_free}"
+  puts "#{Time.now}, Balances: #{btc_free.to_s('8F')}, #{usdt_free}"
 
   btc_current_price, btc_last_sell_price, btc_last_buy_price = btc_last_prices.call if btc_free > 1 || usdt_free > 1
 
