@@ -93,20 +93,20 @@ loop {
     btc_free = free if asset === 'BTC'
     usdt_free = free if asset === 'USDT'
   }
-  puts "#{Time.now}, Balances: #{btc_free.to_s('8F')}, #{usdt_free}"
+  puts "#{Time.now}, Balances: #{btc_free.to_s('8F')}, #{usdt_free.to_s('8F')}"
 
   btc_current_price, btc_last_sell_price, btc_last_buy_price = btc_last_prices.call if btc_free > 1 || usdt_free > 1
 
   if btc_free > 1
     btc_sell_price = btc_last_buy_price + 500
     btc_sell_price = btc_current_price + 100 if btc_sell_price < btc_current_price
-    order.call('SELL', btc_sell_price, btc_free.to_s('8F'))
+    p order.call('SELL', btc_sell_price, btc_free.floor(6).to_s('6F'))
   end
 
   if usdt_free > 1
     btc_buy_price = btc_last_sell_price - 500
     btc_buy_price = btc_current_price - 100 if btc_buy_price > btc_current_price
-    order.call('BUY', btc_buy_price, (usdt_free / btc_buy_price).to_s('8F'))
+    p order.call('BUY', btc_buy_price, (usdt_free / btc_buy_price).floor(6).to_s('6F'))
   end
 
   (9 + rand * 39).to_i.times { sleep 0.1 if going }
