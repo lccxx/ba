@@ -97,18 +97,18 @@ loop {
 
   btc_current_price, btc_last_sell_price, btc_last_buy_price = btc_last_prices.call if btc_free > 1 || usdt_free > 1
 
-  if btc_free > 1
+  if btc_free > 0.1
     btc_sell_price = btc_last_buy_price + 500
     btc_sell_price = btc_current_price + 100 if btc_sell_price < btc_current_price
     p order.call('SELL', btc_sell_price, btc_free.floor(6).to_s('6F'))
   end
 
-  if usdt_free > 1
+  if usdt_free > 9
     btc_buy_price = btc_last_sell_price - 500
     btc_buy_price = btc_current_price - 100 if btc_buy_price > btc_current_price
     p order.call('BUY', btc_buy_price, (usdt_free / btc_buy_price).floor(6).to_s('6F'))
   end
 
-  (9 + rand * 39).to_i.times { sleep 0.1 if going }
+  (99 + rand * 9999).to_i.times { sleep 0.1 if going }
   break if not going
 }
